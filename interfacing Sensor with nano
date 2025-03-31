@@ -1,1 +1,85 @@
+//NOTE: This code is written in Arduino IDE
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>       // Include core graphics library for the display
+#include <Adafruit_SSD1306.h>   // Include Adafruit_SSD1306 library to drive the display
+#include <Fonts/FreeMonoBold9pt7b.h>  // Add a custom font
+#include <Adafruit_MLX90614.h>  // For infrared thermometer
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define OLED_RESET -1
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+
+#define led 7
+#define buz 6
+int con = 35;
+float temp;
+
+void setup() {
+    delay(100);  // Delay for the display initialization
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // Initialize the display
+  display.clearDisplay();  // Clear the buffer
+  display.setTextColor(WHITE);  // Set text color
+  mlx.begin();  // Start the infrared thermometer
+  pinMode(led,OUTPUT);
+  pinMode(buz,OUTPUT);
+}
+
+
+void loop() {
+  temp = mlx.readObjectTempC(); //comment this line if you want to test
+
+  display.clearDisplay();  // Clear the display so we can refresh
+
+  // Print text:
+  display.setFont();
+  display.setCursor(45,5);  // (x,y)
+  display.println("TEMPERATURE");  // Text or value to print
+
+  // Print temperature
+  char string[10];  // Create a character array of 10 characters
+  // Convert float to a string:
+  dtostrf(temp, 4, 0, string);  // (variable, no. of digits we are going to use, no. of decimal digits, string name)
+  
+  display.setFont(&FreeMonoBold9pt7b);  // Set a custom font
+  display.setCursor(22,25);  // (x,y)
+  display.println(string);  // Text or value to print
+  display.setCursor(90,25);  // (x,y)
+  display.println("C");  // Text or value to print
+  display.setFont(); 
+  display.setCursor(78,15);  // (x,y)
+  display.cp437(true);
+  display.write(167);
+  
+  // Draw a filled circle:
+    display.fillCircle(18, 27, 5, WHITE); // Draw filled circle (x,y,radius,color). X and Y are the coordinates for the center point
+    
+  // Draw rounded rectangle:
+   display.drawRoundRect(16, 3, 5, 24, 2, WHITE); // Draw rounded rectangle (x,y,width,height,radius,color)
+   
+   // It draws from the location to down-right
+    // Draw ruler step
+
+   for (int i = 3; i<=18; i=i+2){
+    display.drawLine(21, i, 22, i, WHITE);  // Draw line (x0,y0,x1,y1,color)
+  }
+  
+  //Draw temperature
+  temp = temp*0.43; //ratio for show
+  display.drawLine(18, 23, 18, 23-temp, WHITE);  // Draw line (x0,y0,x1,y1,color)
+    if(temp > con*0.43)
+  {
+    digitalWrite(led,HIGH);
+    digitalWrite(buz,HIGH);
+  }else
+  {
+    digitalWrite(led,LOW);
+    digitalWrite(buz,LOW);
+  }
+  
+  display.display();  // Print everything we set previously
+}
 
